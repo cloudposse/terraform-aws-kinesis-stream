@@ -8,5 +8,4 @@ stage = "test"
 
 name = "example"
 
-example_input = "Hello, world!"
-
+shard_count = 2

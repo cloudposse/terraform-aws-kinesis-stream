@@ -1,7 +1,7 @@
-module "example" {
+module "kinesis" {
   source = "../.."
 
-  example = coalesce(var.example_input_override, var.example_input)
+  shard_count = var.shard_count
 
   context = module.this.context
 }

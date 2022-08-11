@@ -1,14 +1,14 @@
-output "id" {
-  description = "ID of the created example"
-  value       = module.example.id
+output "name" {
+  description = "Name of Kinesis stream."
+  value       = module.kinesis.name
 }
 
-output "example" {
-  description = "Output \"example\" from example module"
-  value       = module.example.example
+output "shard_count" {
+  description = "Number of shards provisioned."
+  value       = module.kinesis.shard_count
 }
 
-output "random" {
-  description = "Output \"random\" from example module"
-  value       = module.example.random
+output "stream_arn" {
+  description = "ARN of the Kinesis stream."
+  value       = module.kinesis.stream_arn
 }
