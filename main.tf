@@ -18,3 +18,10 @@ resource "aws_kinesis_stream" "default" {
 
   tags = module.this.tags
 }
+
+resource "aws_kinesis_stream_consumer" "default" {
+  count = module.this.enabled ? var.consumer_count : 0
+
+  name       = format("%s-consumer-%s", module.this.id, count.index)
+  stream_arn = try(aws_kinesis_stream.default[0].arn, null)
+}

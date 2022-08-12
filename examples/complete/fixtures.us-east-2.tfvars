@@ -9,3 +9,5 @@ stage = "test"
 name = "example"
 
 shard_count = 2
+
+consumer_count = 2
