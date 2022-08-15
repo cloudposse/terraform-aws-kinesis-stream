@@ -61,7 +61,7 @@
 | Name | Description |
 |------|-------------|
 | <a name="output_consumers"></a> [consumers](#output\_consumers) | List of consumers registered with Kinesis stream. |
-| <a name="output_name"></a> [name](#output\_name) | Name of Kinesis stream. |
+| <a name="output_name"></a> [name](#output\_name) | Name of the Kinesis stream. |
 | <a name="output_shard_count"></a> [shard\_count](#output\_shard\_count) | Number of shards provisioned. |
 | <a name="output_stream_arn"></a> [stream\_arn](#output\_stream\_arn) | ARN of the Kinesis stream. |
 <!-- markdownlint-restore -->
