@@ -115,7 +115,7 @@ module "label" {
 }
 
 module "kinesis" {
-  source  = "cloudposse/*****/aws"
+  source  = "cloudposse/kinesis-stream/aws"
   # Cloud Posse recommends pinning every module to a specific version
   # version = "x.x.x"
 
