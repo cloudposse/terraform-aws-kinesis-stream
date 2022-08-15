@@ -1,5 +1,9 @@
+locals {
+  enabled = module.this.enabled
+}
+
 resource "aws_kinesis_stream" "default" {
-  count = module.this.enabled ? 1 : 0
+  count = local.enabled ? 1 : 0
 
   name                      = module.this.id
   shard_count               = var.stream_mode != "ON_DEMAND" ? var.shard_count : null
@@ -20,7 +24,7 @@ resource "aws_kinesis_stream" "default" {
 }
 
 resource "aws_kinesis_stream_consumer" "default" {
-  count = module.this.enabled ? var.consumer_count : 0
+  count = local.enabled ? var.consumer_count : 0
 
   name       = format("%s-consumer-%s", module.this.id, count.index)
   stream_arn = try(aws_kinesis_stream.default[0].arn, null)
