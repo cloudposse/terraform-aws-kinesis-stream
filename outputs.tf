@@ -1,5 +1,5 @@
 output "name" {
-  description = "Name of Kinesis stream."
+  description = "Name of the Kinesis stream."
   value       = try(aws_kinesis_stream.default[0].name, null)
 }
 
