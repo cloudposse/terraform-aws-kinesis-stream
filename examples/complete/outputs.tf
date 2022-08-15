@@ -1,5 +1,5 @@
 output "name" {
-  description = "Name of Kinesis stream."
+  description = "Name of the Kinesis stream."
   value       = module.kinesis.name
 }
 
