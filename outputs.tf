@@ -5,7 +5,7 @@ output "name" {
 
 output "shard_count" {
   description = "Number of shards provisioned."
-  value       = join("", aws_kinesis_stream.default.*.shard_count)
+  value       = try(aws_kinesis_stream.default[0].shard_count, null)
 }
 
 output "stream_arn" {
