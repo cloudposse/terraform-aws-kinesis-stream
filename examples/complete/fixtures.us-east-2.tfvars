@@ -8,5 +8,6 @@ stage = "test"
 
 name = "example"
 
-example_input = "Hello, world!"
+shard_count = 2
 
+consumer_count = 2
