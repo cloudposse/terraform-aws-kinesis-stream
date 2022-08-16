@@ -75,7 +75,7 @@ func TestExamplesCompleteDisabled(t *testing.T) {
     VarFiles: varFiles,
     Vars: map[string]interface{}{
       "attributes": attributes,
-      "enabled":    "false",
+      "enabled":    false,
     },
   }
 
