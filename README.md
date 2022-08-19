@@ -28,8 +28,7 @@
 
 -->
 
-Short
-description
+Terraform module to deploy an [Amazon Kinesis Data Stream](https://aws.amazon.com/kinesis/data-streams/) on AWS.
 
 ---
 
@@ -59,10 +58,6 @@ We literally have [*hundreds of terraform modules*][terraform_modules] that are 
 
 
 
-
-## Introduction
-
-This is an introduction.
 
 
 ## Security & Compliance [<img src="https://cloudposse.com/wp-content/uploads/2020/11/bridgecrew.svg" width="250" align="right" />](https://bridgecrew.io/)
