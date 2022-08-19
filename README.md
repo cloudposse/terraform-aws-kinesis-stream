@@ -28,8 +28,7 @@
 
 -->
 
-Short
-description
+Terraform module to deploy an [Amazon Kinesis Data Stream](https://aws.amazon.com/kinesis/data-streams/) on AWS.
 
 ---
 
@@ -59,10 +58,6 @@ We literally have [*hundreds of terraform modules*][terraform_modules] that are 
 
 
 
-
-## Introduction
-
-This is an introduction.
 
 
 ## Security & Compliance [<img src="https://cloudposse.com/wp-content/uploads/2020/11/bridgecrew.svg" width="250" align="right" />](https://bridgecrew.io/)
@@ -374,7 +369,7 @@ Check out [our other projects][github], [follow us on twitter][twitter], [apply 
 
 [![README Footer][readme_footer_img]][readme_footer_link]
 [![Beacon][beacon]][website]
-<!-- markdownlint-disable -->
+
   [logo]: https://cloudposse.com/logo-300x69.svg
   [docs]: https://cpco.io/docs?utm_source=github&utm_medium=readme&utm_campaign=%!!(string=docs)s(<nil>)&utm_content=%!s(MISSING)
   [website]: https://cpco.io/homepage?utm_source=github&utm_medium=readme&utm_campaign=%!!(string=website)s(<nil>)&utm_content=%!s(MISSING)
@@ -405,4 +400,3 @@ Check out [our other projects][github], [follow us on twitter][twitter], [apply 
   [share_googleplus]: https://plus.google.com/share?url=https://github.com/%!s(<nil>)
   [share_email]: mailto:?subject=terraform-aws-kinesis-stream&body=https://github.com/%!s(<nil>)
   [beacon]: https://ga-beacon.cloudposse.com/UA-76589703-4/%!s(<nil>)?pixel&cs=github&cm=readme&an=nil
-<!-- markdownlint-restore -->
