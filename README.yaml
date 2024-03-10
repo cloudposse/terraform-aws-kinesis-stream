@@ -19,19 +19,19 @@ copyrights:
     year: "2021"
 
 # Canonical GitHub repo
-github_repo:
+github_repo: cloudposse/terraform-aws-kinesis-stream
 
 # Badges to display
 badges:
-  - name: "Latest Release"
-    image: "https://img.shields.io/github/release/cloudposse/terraform-aws-kinesis-stream.svg"
-    url: "https://github.com/cloudposse/terraform-aws-kinesis-stream/releases/latest"
-  - name: "Slack Community"
-    image: "https://slack.cloudposse.com/badge.svg"
-    url: "https://slack.cloudposse.com"
-  - name: "Discourse Forum"
-    image: "https://img.shields.io/discourse/https/ask.sweetops.com/posts.svg"
-    url: "https://ask.sweetops.com/"
+  - name: Latest Release
+    image: https://img.shields.io/github/release/None.svg?style=for-the-badge
+    url: https://github.com/None/releases/latest
+  - name: Last Updated
+    image: https://img.shields.io/github/last-commit/None.svg?style=for-the-badge
+    url: https://github.com/None/commits
+  - name: Slack Community
+    image: https://slack.cloudposse.com/for-the-badge.svg
+    url: https://slack.cloudposse.com
 
 # List any related terraform modules that this module may be used with or that this module depends on.
 related:
@@ -80,6 +80,4 @@ include:
   - "docs/terraform.md"
 
 # Contributors to this project
-contributors:
-  - name: "Dan Meyers"
-    github: "danjbh"
+contributors: []
