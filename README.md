@@ -2,7 +2,7 @@
 
 <!-- markdownlint-disable -->
 # terraform-aws-kinesis-stream <a href="https://cpco.io/homepage?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-kinesis-stream&utm_content="><img align="right" src="https://cloudposse.com/logo-300x69.svg" width="150" /></a>
-<a href="https://github.com/None/releases/latest"><img src="https://img.shields.io/github/release/None.svg?style=for-the-badge" alt="Latest Release"/></a><a href="https://github.com/None/commits"><img src="https://img.shields.io/github/last-commit/None.svg?style=for-the-badge" alt="Last Updated"/></a><a href="https://slack.cloudposse.com"><img src="https://slack.cloudposse.com/for-the-badge.svg" alt="Slack Community"/></a>
+<a href="https://github.com/cloudposse/terraform-aws-kinesis-stream/releases/latest"><img src="https://img.shields.io/github/release/cloudposse/terraform-aws-kinesis-stream.svg?style=for-the-badge" alt="Latest Release"/></a><a href="https://github.com/cloudposse/terraform-aws-kinesis-stream/commits"><img src="https://img.shields.io/github/last-commit/cloudposse/terraform-aws-kinesis-stream.svg?style=for-the-badge" alt="Last Updated"/></a><a href="https://slack.cloudposse.com"><img src="https://slack.cloudposse.com/for-the-badge.svg" alt="Slack Community"/></a>
 <!-- markdownlint-restore -->
 
 <!--

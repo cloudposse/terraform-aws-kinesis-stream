@@ -24,11 +24,11 @@ github_repo: cloudposse/terraform-aws-kinesis-stream
 # Badges to display
 badges:
   - name: Latest Release
-    image: https://img.shields.io/github/release/None.svg?style=for-the-badge
-    url: https://github.com/None/releases/latest
+    image: https://img.shields.io/github/release/cloudposse/terraform-aws-kinesis-stream.svg?style=for-the-badge
+    url: https://github.com/cloudposse/terraform-aws-kinesis-stream/releases/latest
   - name: Last Updated
-    image: https://img.shields.io/github/last-commit/None.svg?style=for-the-badge
-    url: https://github.com/None/commits
+    image: https://img.shields.io/github/last-commit/cloudposse/terraform-aws-kinesis-stream.svg?style=for-the-badge
+    url: https://github.com/cloudposse/terraform-aws-kinesis-stream/commits
   - name: Slack Community
     image: https://slack.cloudposse.com/for-the-badge.svg
     url: https://slack.cloudposse.com
