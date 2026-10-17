@@ -12,3 +12,8 @@ output "stream_arn" {
   description = "ARN of the Kinesis stream."
   value       = module.kinesis.stream_arn
 }
+
+output "consumers" {
+  description = "Enhanced fan-out consumers registered with the stream."
+  value       = module.kinesis.consumers
+}

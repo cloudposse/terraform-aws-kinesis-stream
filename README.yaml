@@ -1,6 +1,6 @@
 #
 # This is the canonical configuration for the `README.md`
-# Run `make readme` to rebuild the `README.md`
+# Run `atmos docs generate readme` (or `atmos fix`) to rebuild the `README.md`
 #
 
 # Name of this project
@@ -33,47 +33,97 @@ badges:
     image: https://slack.cloudposse.com/for-the-badge.svg
     url: https://cloudposse.com/slack
 
-# List any related terraform modules that this module may be used with or that this module depends on.
+# Modules this one is commonly used with or depends on.
 related:
   - name: "terraform-null-label"
     description: "Terraform module designed to generate consistent names and tags for resources. Use terraform-null-label to implement a strict naming convention."
     url: "https://github.com/cloudposse/terraform-null-label"
+  - name: "terraform-aws-kms-key"
+    description: "Terraform module to provision a KMS key with alias. Use it to create a customer-managed key and pass it to this module as `kms_key_id`."
+    url: "https://github.com/cloudposse/terraform-aws-kms-key"
+  - name: "terraform-aws-lambda-function"
+    description: "Deploys an AWS Lambda function and its IAM role. A common consumer of a Kinesis stream through an event source mapping."
+    url: "https://github.com/cloudposse/terraform-aws-lambda-function"
 
-# List any resources helpful for someone to get started. For example, link to the hashicorp documentation or AWS documentation.
+# Helpful background reading.
 references:
+  - name: "Amazon Kinesis Data Streams developer guide"
+    description: "How streams, shards, retention and capacity modes work"
+    url: "https://docs.aws.amazon.com/streams/latest/dev/introduction.html"
+  - name: "Enhanced fan-out consumers"
+    description: "What the `consumer_count` input registers and the per-stream consumer limit"
+    url: "https://docs.aws.amazon.com/streams/latest/dev/enhanced-consumers.html"
+  - name: "Server-side encryption for Kinesis Data Streams"
+    description: "Behavior of the `encryption_type` and `kms_key_id` inputs"
+    url: "https://docs.aws.amazon.com/streams/latest/dev/server-side-encryption.html"
+  - name: "aws_kinesis_stream (Terraform AWS provider)"
+    description: "The resource this module wraps"
+    url: "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kinesis_stream"
 
 # Short description of this project
 description: |-
   Terraform module to deploy an [Amazon Kinesis Data Stream](https://aws.amazon.com/kinesis/data-streams/) on AWS.
 
+introduction: |-
+  This module creates one Kinesis Data Stream and, optionally, a number of
+  [enhanced fan-out consumers](https://docs.aws.amazon.com/streams/latest/dev/enhanced-consumers.html)
+  registered with it. Names and tags come from [terraform-null-label](https://github.com/cloudposse/terraform-null-label),
+  and setting `enabled = false` creates nothing.
+
+  What it creates:
+
+  - `aws_kinesis_stream`: a stream in `PROVISIONED` mode (sized with `shard_count`) or `ON_DEMAND` mode (set `stream_mode = "ON_DEMAND"`; `shard_count` is then ignored).
+  - `aws_kinesis_stream_consumer`: `consumer_count` consumers, named `<id>-consumer-<index>`. Each consumer gets its own dedicated read throughput, up to AWS's per-stream limit.
+
+  Design notes:
+
+  - Server-side encryption is on by default with the AWS-managed key `alias/aws/kinesis`. Pass your own key with `kms_key_id`, or set `encryption_type = "NONE"` to turn it off.
+  - `retention_period` is in hours, from 24 (default) to 8760 (365 days). Retention beyond 24 hours is billed by AWS.
+  - `enforce_consumer_deletion` defaults to `true` so a stream with registered consumers can be destroyed without a manual step.
+
+  This module does not create IAM policies, event source mappings, or alarms. Grant producers and consumers access in the stacks that use the stream (for example with the `stream_arn` output).
+
 # How to use this module. Should be an easy example to copy and paste.
 usage: |-
-  For a complete example, see [examples/complete](examples/complete).
-
-  For automated tests of the complete example using [bats](https://github.com/bats-core/bats-core) and [Terratest](https://github.com/gruntwork-io/terratest)
-  (which tests and deploys the example on AWS), see [test](test).
+  A provisioned stream with two shards and encryption on (the default):
 
   ```hcl
-  # Create a standard label resource. See [null-label](https://github.com/cloudposse/terraform-null-label/#terraform-null-label--)
-  module "label" {
-    source  = "cloudposse/label/null"
-    # Cloud Posse recommends pinning every module to a specific version, though usually you want to use the current one
-    # version = "x.x.x"
-
-    namespace = "eg"
-    name      = "example"
-  }
-
   module "kinesis" {
     source  = "cloudposse/kinesis-stream/aws"
-    # Cloud Posse recommends pinning every module to a specific version
-    # version = "x.x.x"
+    version = "1.0.0"
+
+    namespace   = "eg"
+    environment = "use1"
+    stage       = "prod"
+    name        = "events"
 
     shard_count = 2
-
-    context = module.label.this
   }
   ```
+
+  An on-demand stream with a customer-managed key and 7 days of retention:
+
+  ```hcl
+  module "kinesis" {
+    source  = "cloudposse/kinesis-stream/aws"
+    version = "1.0.0"
+
+    namespace = "eg"
+    name      = "events"
+
+    stream_mode      = "ON_DEMAND"
+    kms_key_id       = module.kms_key.key_arn
+    retention_period = 168
+  }
+  ```
+
+  Use the outputs to wire up producers and consumers, for example `module.kinesis.stream_arn` in an IAM policy.
+
+examples: |-
+  - [examples/complete](examples/complete): a two-shard stream with two enhanced fan-out consumers. Its inputs for the emulator-backed tests are set in `tests/stacks/deploy/test.yaml`.
+
+  Unit tests for the module run offline with `terraform test` (see `tests/main.tftest.hcl`); `atmos test` also applies the example to an AWS emulator.
+
 # Other files to include in this README from the project folder
 include: []
 contributors: []

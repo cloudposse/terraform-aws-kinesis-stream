@@ -1,10 +1,19 @@
 
 
 <!-- markdownlint-disable -->
-<a href="https://cpco.io/homepage"><img src="https://github.com/cloudposse/terraform-aws-kinesis-stream/blob/main/.github/banner.png?raw=true" alt="Project Banner"/></a><br/>
-    <p align="right">
-<a href="https://github.com/cloudposse/terraform-aws-kinesis-stream/releases/latest"><img src="https://img.shields.io/github/release/cloudposse/terraform-aws-kinesis-stream.svg?style=for-the-badge" alt="Latest Release"/></a><a href="https://github.com/cloudposse/terraform-aws-kinesis-stream/commits"><img src="https://img.shields.io/github/last-commit/cloudposse/terraform-aws-kinesis-stream.svg?style=for-the-badge" alt="Last Updated"/></a><a href="https://slack.cloudposse.com"><img src="https://slack.cloudposse.com/for-the-badge.svg" alt="Slack Community"/></a></p>
+
+  <a href="https://cloudposse.com?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-kinesis-stream&utm_content=banner"><img src="https://cloudposse.com/api/github/banner/cloudposse/terraform-aws-kinesis-stream" alt="Project Banner"/></a><br/>
+
+
+<p align="center"><a href="https://github.com/cloudposse/terraform-aws-kinesis-stream/releases/latest"><img src="https://img.shields.io/github/release/cloudposse/terraform-aws-kinesis-stream.svg?style=for-the-badge" alt="Latest Release"/></a><a href="https://github.com/cloudposse/terraform-aws-kinesis-stream/commits"><img src="https://img.shields.io/github/last-commit/cloudposse/terraform-aws-kinesis-stream.svg?style=for-the-badge" alt="Last Updated"/></a><a href="https://cloudposse.com/slack"><img src="https://slack.cloudposse.com/for-the-badge.svg" alt="Slack Community"/></a>
+
+</p>
+
+  # terraform-aws-kinesis-stream
+
 <!-- markdownlint-restore -->
+
+
 
 <!--
 
@@ -37,42 +46,69 @@ Terraform module to deploy an [Amazon Kinesis Data Stream](https://aws.amazon.co
 >
 > <details>
 > <summary><strong>Watch demo of using Atmos with Terraform</strong></summary>
-> <img src="https://github.com/cloudposse/atmos/blob/master/docs/demo.gif?raw=true"/><br/>
+> <img src="https://github.com/cloudposse/atmos/blob/main/docs/demo.gif?raw=true"/><br/>
 > <i>Example of running <a href="https://atmos.tools"><code>atmos</code></a> to manage infrastructure from our <a href="https://atmos.tools/quick-start/">Quick Start</a> tutorial.</i>
-> </detalis>
+> </details>
 
+
+## Introduction
+
+This module creates one Kinesis Data Stream and, optionally, a number of
+[enhanced fan-out consumers](https://docs.aws.amazon.com/streams/latest/dev/enhanced-consumers.html)
+registered with it. Names and tags come from [terraform-null-label](https://github.com/cloudposse/terraform-null-label),
+and setting `enabled = false` creates nothing.
+
+What it creates:
+
+- `aws_kinesis_stream`: a stream in `PROVISIONED` mode (sized with `shard_count`) or `ON_DEMAND` mode (set `stream_mode = "ON_DEMAND"`; `shard_count` is then ignored).
+- `aws_kinesis_stream_consumer`: `consumer_count` consumers, named `<id>-consumer-<index>`. Each consumer gets its own dedicated read throughput, up to AWS's per-stream limit.
+
+Design notes:
+
+- Server-side encryption is on by default with the AWS-managed key `alias/aws/kinesis`. Pass your own key with `kms_key_id`, or set `encryption_type = "NONE"` to turn it off.
+- `retention_period` is in hours, from 24 (default) to 8760 (365 days). Retention beyond 24 hours is billed by AWS.
+- `enforce_consumer_deletion` defaults to `true` so a stream with registered consumers can be destroyed without a manual step.
+
+This module does not create IAM policies, event source mappings, or alarms. Grant producers and consumers access in the stacks that use the stream (for example with the `stream_arn` output).
 
 
 
 
 ## Usage
 
-For a complete example, see [examples/complete](examples/complete).
-
-For automated tests of the complete example using [bats](https://github.com/bats-core/bats-core) and [Terratest](https://github.com/gruntwork-io/terratest)
-(which tests and deploys the example on AWS), see [test](test).
+A provisioned stream with two shards and encryption on (the default):
 
 ```hcl
-# Create a standard label resource. See [null-label](https://github.com/cloudposse/terraform-null-label/#terraform-null-label--)
-module "label" {
-  source  = "cloudposse/label/null"
-  # Cloud Posse recommends pinning every module to a specific version, though usually you want to use the current one
-  # version = "x.x.x"
-
-  namespace = "eg"
-  name      = "example"
-}
-
 module "kinesis" {
   source  = "cloudposse/kinesis-stream/aws"
-  # Cloud Posse recommends pinning every module to a specific version
-  # version = "x.x.x"
+  version = "1.0.0"
+
+  namespace   = "eg"
+  environment = "use1"
+  stage       = "prod"
+  name        = "events"
 
   shard_count = 2
-
-  context = module.label.this
 }
 ```
+
+An on-demand stream with a customer-managed key and 7 days of retention:
+
+```hcl
+module "kinesis" {
+  source  = "cloudposse/kinesis-stream/aws"
+  version = "1.0.0"
+
+  namespace = "eg"
+  name      = "events"
+
+  stream_mode      = "ON_DEMAND"
+  kms_key_id       = module.kms_key.key_arn
+  retention_period = 168
+}
+```
+
+Use the outputs to wire up producers and consumers, for example `module.kinesis.stream_arn` in an IAM policy.
 
 > [!IMPORTANT]
 > In Cloud Posse's examples, we avoid pinning modules to specific versions to prevent discrepancies between the documentation
@@ -84,61 +120,55 @@ module "kinesis" {
 
 
 
+## Examples
+
+- [examples/complete](examples/complete): a two-shard stream with two enhanced fan-out consumers. Its inputs for the emulator-backed tests are set in `tests/stacks/deploy/test.yaml`.
+
+Unit tests for the module run offline with `terraform test` (see `tests/main.tftest.hcl`); `atmos test` also applies the example to an AWS emulator.
 
 
 
-<!-- markdownlint-disable -->
-## Makefile Targets
-```text
-Available targets:
 
-  help                                Help screen
-  help/all                            Display help for all targets
-  help/short                          This help short screen
-  lint                                Lint terraform code
-
-```
-<!-- markdownlint-restore -->
 <!-- markdownlint-disable -->
 ## Requirements
 
 | Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0 |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.0 |
+| ---- | ------- |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.69.1 |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_this"></a> [this](#module\_this) | cloudposse/label/null | 0.25.0 |
 
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_kinesis_stream.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kinesis_stream) | resource |
 | [aws_kinesis_stream_consumer.default](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kinesis_stream_consumer) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_additional_tag_map"></a> [additional\_tag\_map](#input\_additional\_tag\_map) | Additional key-value pairs to add to each map in `tags_as_list_of_maps`. Not added to `tags` or `id`.<br/>This is for some rare cases where resources want additional configuration of tags<br/>and therefore take a list of maps with tag key, value, and additional configuration. | `map(string)` | `{}` | no |
 | <a name="input_attributes"></a> [attributes](#input\_attributes) | ID element. Additional attributes (e.g. `workers` or `cluster`) to add to `id`,<br/>in the order they appear in the list. New attributes are appended to the<br/>end of the list. The elements of the list are joined by the `delimiter`<br/>and treated as a single ID element. | `list(string)` | `[]` | no |
-| <a name="input_consumer_count"></a> [consumer\_count](#input\_consumer\_count) | Number of consumers to register with Kinesis stream | `number` | `0` | no |
+| <a name="input_consumer_count"></a> [consumer\_count](#input\_consumer\_count) | Number of enhanced fan-out consumers to register with the Kinesis stream | `number` | `0` | no |
 | <a name="input_context"></a> [context](#input\_context) | Single object for setting entire context at once.<br/>See description of individual variables for details.<br/>Leave string and numeric variables as `null` to use default value.<br/>Individual variable settings (non-null) override settings in context object,<br/>except for attributes, tags, and additional\_tag\_map, which are merged. | `any` | <pre>{<br/>  "additional_tag_map": {},<br/>  "attributes": [],<br/>  "delimiter": null,<br/>  "descriptor_formats": {},<br/>  "enabled": true,<br/>  "environment": null,<br/>  "id_length_limit": null,<br/>  "label_key_case": null,<br/>  "label_order": [],<br/>  "label_value_case": null,<br/>  "labels_as_tags": [<br/>    "unset"<br/>  ],<br/>  "name": null,<br/>  "namespace": null,<br/>  "regex_replace_chars": null,<br/>  "stage": null,<br/>  "tags": {},<br/>  "tenant": null<br/>}</pre> | no |
 | <a name="input_delimiter"></a> [delimiter](#input\_delimiter) | Delimiter to be used between ID elements.<br/>Defaults to `-` (hyphen). Set to `""` to use no delimiter at all. | `string` | `null` | no |
 | <a name="input_descriptor_formats"></a> [descriptor\_formats](#input\_descriptor\_formats) | Describe additional descriptors to be output in the `descriptors` output map.<br/>Map of maps. Keys are names of descriptors. Values are maps of the form<br/>`{<br/>   format = string<br/>   labels = list(string)<br/>}`<br/>(Type is `any` so the map values can later be enhanced to provide additional options.)<br/>`format` is a Terraform format string to be passed to the `format()` function.<br/>`labels` is a list of labels, in order, to pass to `format()` function.<br/>Label values will be normalized before being passed to `format()` so they will be<br/>identical to how they appear in `id`.<br/>Default is `{}` (`descriptors` output will be empty). | `any` | `{}` | no |
 | <a name="input_enabled"></a> [enabled](#input\_enabled) | Set to false to prevent the module from creating any resources | `bool` | `null` | no |
 | <a name="input_encryption_type"></a> [encryption\_type](#input\_encryption\_type) | The encryption type to use. Acceptable values are `NONE` and `KMS`. | `string` | `"KMS"` | no |
-| <a name="input_enforce_consumer_deletion"></a> [enforce\_consumer\_deletion](#input\_enforce\_consumer\_deletion) | A boolean that indicates all registered consumers should be deregistered from the stream so that the stream can be destroyed without error. | `bool` | `true` | no |
+| <a name="input_enforce_consumer_deletion"></a> [enforce\_consumer\_deletion](#input\_enforce\_consumer\_deletion) | If `true`, deregister all registered consumers when destroying the stream, so the stream can be destroyed without error | `bool` | `true` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | ID element. Usually used for region e.g. 'uw2', 'us-west-2', OR role 'prod', 'staging', 'dev', 'UAT' | `string` | `null` | no |
 | <a name="input_id_length_limit"></a> [id\_length\_limit](#input\_id\_length\_limit) | Limit `id` to this many characters (minimum 6).<br/>Set to `0` for unlimited length.<br/>Set to `null` for keep the existing setting, which defaults to `0`.<br/>Does not affect `id_full`. | `number` | `null` | no |
 | <a name="input_kms_key_id"></a> [kms\_key\_id](#input\_kms\_key\_id) | The GUID for the customer-managed KMS key to use for encryption. | `string` | `"alias/aws/kinesis"` | no |
@@ -149,23 +179,28 @@ Available targets:
 | <a name="input_name"></a> [name](#input\_name) | ID element. Usually the component or solution name, e.g. 'app' or 'jenkins'.<br/>This is the only ID element not also included as a `tag`.<br/>The "name" tag is set to the full `id` string. There is no tag with the value of the `name` input. | `string` | `null` | no |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | ID element. Usually an abbreviation of your organization name, e.g. 'eg' or 'cp', to help ensure generated IDs are globally unique | `string` | `null` | no |
 | <a name="input_regex_replace_chars"></a> [regex\_replace\_chars](#input\_regex\_replace\_chars) | Terraform regular expression (regex) string.<br/>Characters matching the regex will be removed from the ID elements.<br/>If not set, `"/[^a-zA-Z0-9-]/"` is used to remove all characters other than hyphens, letters and digits. | `string` | `null` | no |
-| <a name="input_retention_period"></a> [retention\_period](#input\_retention\_period) | Length of time data records are accessible after they are added to the stream. The maximum value of a stream's retention period is 168 hours. Minimum value is 24. Default is 24. | `number` | `24` | no |
+| <a name="input_retention_period"></a> [retention\_period](#input\_retention\_period) | Length of time, in hours, that data records are accessible after they are added to the stream. Must be between 24 (the default) and 8760 (365 days) | `number` | `24` | no |
 | <a name="input_shard_count"></a> [shard\_count](#input\_shard\_count) | The number of shards that the stream will use | `number` | `1` | no |
-| <a name="input_shard_level_metrics"></a> [shard\_level\_metrics](#input\_shard\_level\_metrics) | A list of shard-level CloudWatch metrics which can be enabled for the stream. | `list(string)` | <pre>[<br/>  "IncomingBytes",<br/>  "OutgoingBytes"<br/>]</pre> | no |
+| <a name="input_shard_level_metrics"></a> [shard\_level\_metrics](#input\_shard\_level\_metrics) | A list of shard-level CloudWatch metrics which can be enabled for the stream | `list(string)` | <pre>[<br/>  "IncomingBytes",<br/>  "OutgoingBytes"<br/>]</pre> | no |
 | <a name="input_stage"></a> [stage](#input\_stage) | ID element. Usually used to indicate role, e.g. 'prod', 'staging', 'source', 'build', 'test', 'deploy', 'release' | `string` | `null` | no |
-| <a name="input_stream_mode"></a> [stream\_mode](#input\_stream\_mode) | Specifies the capacity mode of the stream. Must be either `PROVISIONED` or `ON_DEMAND`. If `ON_DEMAND` is used, then `shard_count` is ignored. | `string` | `null` | no |
+| <a name="input_stream_mode"></a> [stream\_mode](#input\_stream\_mode) | Specifies the capacity mode of the stream. Must be either `PROVISIONED` or `ON_DEMAND`. If `ON_DEMAND` is used, then `shard_count` is ignored. If `null`, the AWS default (`PROVISIONED`) applies. | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Additional tags (e.g. `{'BusinessUnit': 'XYZ'}`).<br/>Neither the tag keys nor the tag values will be modified by this module. | `map(string)` | `{}` | no |
 | <a name="input_tenant"></a> [tenant](#input\_tenant) | ID element \_(Rarely used, not included by default)\_. A customer identifier, indicating who this instance of a resource is for | `string` | `null` | no |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
-| <a name="output_consumers"></a> [consumers](#output\_consumers) | List of consumers registered with Kinesis stream. |
-| <a name="output_name"></a> [name](#output\_name) | Name of the Kinesis stream. |
-| <a name="output_shard_count"></a> [shard\_count](#output\_shard\_count) | Number of shards provisioned. |
-| <a name="output_stream_arn"></a> [stream\_arn](#output\_stream\_arn) | ARN of the Kinesis stream. |
+| ---- | ----------- |
+| <a name="output_consumers"></a> [consumers](#output\_consumers) | List of enhanced fan-out consumers registered with the stream (empty when none are requested or the module is disabled) |
+| <a name="output_name"></a> [name](#output\_name) | Name of the Kinesis stream, or `null` when the module is disabled |
+| <a name="output_shard_count"></a> [shard\_count](#output\_shard\_count) | Number of shards provisioned, or `null` when the module is disabled or the stream is `ON_DEMAND` |
+| <a name="output_stream_arn"></a> [stream\_arn](#output\_stream\_arn) | ARN of the Kinesis stream, or `null` when the module is disabled |
 <!-- markdownlint-restore -->
+
+
+
+
+
 
 
 ## Related Projects
@@ -173,133 +208,61 @@ Available targets:
 Check out these related projects.
 
 - [terraform-null-label](https://github.com/cloudposse/terraform-null-label) - Terraform module designed to generate consistent names and tags for resources. Use terraform-null-label to implement a strict naming convention.
+- [terraform-aws-kms-key](https://github.com/cloudposse/terraform-aws-kms-key) - Terraform module to provision a KMS key with alias. Use it to create a customer-managed key and pass it to this module as `kms_key_id`.
+- [terraform-aws-lambda-function](https://github.com/cloudposse/terraform-aws-lambda-function) - Deploys an AWS Lambda function and its IAM role. A common consumer of a Kinesis stream through an event source mapping.
 
 
 ## References
 
 For additional context, refer to some of these links.
 
+- [Amazon Kinesis Data Streams developer guide](https://docs.aws.amazon.com/streams/latest/dev/introduction.html) - How streams, shards, retention and capacity modes work
+- [Enhanced fan-out consumers](https://docs.aws.amazon.com/streams/latest/dev/enhanced-consumers.html) - What the `consumer_count` input registers and the per-stream consumer limit
+- [Server-side encryption for Kinesis Data Streams](https://docs.aws.amazon.com/streams/latest/dev/server-side-encryption.html) - Behavior of the `encryption_type` and `kms_key_id` inputs
+- [aws_kinesis_stream (Terraform AWS provider)](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kinesis_stream) - The resource this module wraps
 
 
 
 > [!TIP]
-> #### Use Terraform Reference Architectures for AWS
+> #### Need help with Terraform or AWS?
 >
-> Use Cloud Posse's ready-to-go [terraform architecture blueprints](https://cloudposse.com/reference-architecture/) for AWS to get up and running quickly.
+> Cloud Posse is a cloud infrastructure consulting team and the creators of [Atmos](https://atmos.tools). We help engineering teams work through problems with Terraform, AWS architecture, and infrastructure delivery.
 >
-> ✅ We build it together with your team.<br/>
-> ✅ Your team owns everything.<br/>
-> ✅ 100% Open Source and backed by fanatical support.<br/>
+> ✅ We start by understanding the problem.<br/>
+> ✅ You agree on the scope and deliverables before we start.<br/>
+> ✅ Your team can operate what we build.<br/>
 >
-> <a href="https://cpco.io/commercial-support?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-kinesis-stream&utm_content=commercial_support"><img alt="Request Quote" src="https://img.shields.io/badge/request%20quote-success.svg?style=for-the-badge"/></a>
-> <details><summary>📚 <strong>Learn More</strong></summary>
->
-> <br/>
->
-> Cloud Posse is the leading [**DevOps Accelerator**](https://cpco.io/commercial-support?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-kinesis-stream&utm_content=commercial_support) for funded startups and enterprises.
->
-> *Your team can operate like a pro today.*
->
-> Ensure that your team succeeds by using Cloud Posse's proven process and turnkey blueprints. Plus, we stick around until you succeed.
-> #### Day-0:  Your Foundation for Success
-> - **Reference Architecture.** You'll get everything you need from the ground up built using 100% infrastructure as code.
-> - **Deployment Strategy.** Adopt a proven deployment strategy with GitHub Actions, enabling automated, repeatable, and reliable software releases.
-> - **Site Reliability Engineering.** Gain total visibility into your applications and services with Datadog, ensuring high availability and performance.
-> - **Security Baseline.** Establish a secure environment from the start, with built-in governance, accountability, and comprehensive audit logs, safeguarding your operations.
-> - **GitOps.** Empower your team to manage infrastructure changes confidently and efficiently through Pull Requests, leveraging the full power of GitHub Actions.
->
-> <a href="https://cpco.io/commercial-support?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-kinesis-stream&utm_content=commercial_support"><img alt="Request Quote" src="https://img.shields.io/badge/request%20quote-success.svg?style=for-the-badge"/></a>
->
-> #### Day-2: Your Operational Mastery
-> - **Training.** Equip your team with the knowledge and skills to confidently manage the infrastructure, ensuring long-term success and self-sufficiency.
-> - **Support.** Benefit from a seamless communication over Slack with our experts, ensuring you have the support you need, whenever you need it.
-> - **Troubleshooting.** Access expert assistance to quickly resolve any operational challenges, minimizing downtime and maintaining business continuity.
-> - **Code Reviews.** Enhance your team’s code quality with our expert feedback, fostering continuous improvement and collaboration.
-> - **Bug Fixes.** Rely on our team to troubleshoot and resolve any issues, ensuring your systems run smoothly.
-> - **Migration Assistance.** Accelerate your migration process with our dedicated support, minimizing disruption and speeding up time-to-value.
-> - **Customer Workshops.** Engage with our team in weekly workshops, gaining insights and strategies to continuously improve and innovate.
->
-> <a href="https://cpco.io/commercial-support?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-kinesis-stream&utm_content=commercial_support"><img alt="Request Quote" src="https://img.shields.io/badge/request%20quote-success.svg?style=for-the-badge"/></a>
-> </details>
-
-## ✨ Contributing
-
-This project is under active development, and we encourage contributions from our community.
+> <a href="https://cloudposse.com/meet/consultation?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-kinesis-stream&utm_content=consulting"><img alt="Consulting" src="https://img.shields.io/badge/CONSULTING-8B5CF6.svg?style=for-the-badge&logoColor=white"/></a>
 
 
+## Community 𐦂𖨆𐀪𖠋
+<a href="https://cloudposse.com/office-hours"><img src="https://img.shields.io/badge/Office_Hours-Join_Live-7C3AED?style=for-the-badge&logoColor=white" alt="Office Hours: Join Live"></a>
+<a href="https://youtube.com/cloudposse"><img src="https://img.shields.io/badge/YouTube-Subscribe-8B5CF6?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube: Subscribe"></a>
+<a href="https://cloudposse.com/slack"><img src="https://img.shields.io/badge/Slack-Join_Community-6D28D9?style=for-the-badge&logo=slack&logoColor=white" alt="Slack: Join Community"></a>
 
-Many thanks to our outstanding contributors:
+This project is supported by Cloud Posse and our active DevOps community. Try it out!
 
 <a href="https://github.com/cloudposse/terraform-aws-kinesis-stream/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=cloudposse/terraform-aws-kinesis-stream&max=24" />
 </a>
 
-For 🐛 bug reports & feature requests, please use the [issue tracker](https://github.com/cloudposse/terraform-aws-kinesis-stream/issues).
+## Built by Cloud Posse
 
-In general, PRs are welcome. We follow the typical "fork-and-pull" Git workflow.
- 1. Review our [Code of Conduct](https://github.com/cloudposse/terraform-aws-kinesis-stream/?tab=coc-ov-file#code-of-conduct) and [Contributor Guidelines](https://github.com/cloudposse/.github/blob/main/CONTRIBUTING.md).
- 2. **Fork** the repo on GitHub
- 3. **Clone** the project to your own machine
- 4. **Commit** changes to your own branch
- 5. **Push** your work back up to your fork
- 6. Submit a **Pull Request** so that we can review your changes
+Cloud Posse is a cloud infrastructure consulting team and the creators of [Atmos](https://atmos.tools/). We help engineering teams work through problems with Terraform, AWS architecture, and infrastructure delivery.
 
-**NOTE:** Be sure to merge the latest changes from "upstream" before making a pull request!
+Stuck on something? [Discuss your project](https://cloudposse.com/meet/consultation?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-kinesis-stream&utm_content=consulting) and we'll figure out the next step together, then agree on the work before we start.
 
-### 🌎 Slack Community
+**Know a team that needs help with Terraform or AWS?** [Introduce them to Cloud Posse](https://cloudposse.com/referrals?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-kinesis-stream&utm_content=referrals) and earn 10% of collected service fees from their first paid assessment or consulting project, up to $5,000.
 
-Join our [Open Source Community](https://cpco.io/slack?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-kinesis-stream&utm_content=slack) on Slack. It's **FREE** for everyone! Our "SweetOps" community is where you get to talk with others who share a similar vision for how to rollout and manage infrastructure. This is the best place to talk shop, ask questions, solicit feedback, and work together as a community to build totally *sweet* infrastructure.
+## Connect With Us ✨
+<a href="https://linkedin.com/in/cloudposse"><img src="https://img.shields.io/badge/LinkedIn-Follow-5B21B6?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn: Follow"></a>
+<a href="https://cloudposse.com/newsletter"><img src="https://img.shields.io/badge/Newsletter-Subscribe-4C1D95?style=for-the-badge&logoColor=white" alt="Newsletter: Subscribe"></a>
+<a href="https://cloudposse.com/blog"><img src="https://img.shields.io/badge/Blog-Updates-7C3AED?style=for-the-badge&logoColor=white" alt="Blog: Updates"></a>
 
-### 📰 Newsletter
+We don’t just “talk” about this stuff—we live it every day. We publish, we speak, we share what’s working (and what’s not) in real time. If you want to stay plugged in, connect with us.
 
-Sign up for [our newsletter](https://cpco.io/newsletter?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-kinesis-stream&utm_content=newsletter) and join 3,000+ DevOps engineers, CTOs, and founders who get insider access to the latest DevOps trends, so you can always stay in the know.
-Dropped straight into your Inbox every week — and usually a 5-minute read.
-
-### 📆 Office Hours <a href="https://cloudposse.com/office-hours?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-kinesis-stream&utm_content=office_hours"><img src="https://img.cloudposse.com/fit-in/200x200/https://cloudposse.com/wp-content/uploads/2019/08/Powered-by-Zoom.png" align="right" /></a>
-
-[Join us every Wednesday via Zoom](https://cloudposse.com/office-hours?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-kinesis-stream&utm_content=office_hours) for your weekly dose of insider DevOps trends, AWS news and Terraform insights, all sourced from our SweetOps community, plus a _live Q&A_ that you can’t find anywhere else.
-It's **FREE** for everyone!
-## License
-
-<a href="https://opensource.org/licenses/Apache-2.0"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=for-the-badge" alt="License"></a>
-
-<details>
-<summary>Preamble to the Apache License, Version 2.0</summary>
-<br/>
-<br/>
-
-Complete license is available in the [`LICENSE`](LICENSE) file.
-
-```text
-Licensed to the Apache Software Foundation (ASF) under one
-or more contributor license agreements.  See the NOTICE file
-distributed with this work for additional information
-regarding copyright ownership.  The ASF licenses this file
-to you under the Apache License, Version 2.0 (the
-"License"); you may not use this file except in compliance
-with the License.  You may obtain a copy of the License at
-
-  https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing,
-software distributed under the License is distributed on an
-"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-KIND, either express or implied.  See the License for the
-specific language governing permissions and limitations
-under the License.
-```
-</details>
-
-## Trademarks
-
-All other trademarks referenced herein are the property of their respective owners.
-
-
-## Copyrights
-
-Copyright © 2021-2024 [Cloud Posse, LLC](https://cloudposse.com)
-
-
+---
+© Copyright 2026 [Cloud Posse, LLC](https://cpco.io/copyright)
 
 <a href="https://cloudposse.com/readme/footer/link?utm_source=github&utm_medium=readme&utm_campaign=cloudposse/terraform-aws-kinesis-stream&utm_content=readme_footer_link"><img alt="README footer" src="https://cloudposse.com/readme/footer/img"/></a>
 

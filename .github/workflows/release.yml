@@ -1,4 +1,5 @@
 ---
+# Managed by the terraform-module scaffold. Do not edit; run `atmos fix`.
 name: release
 on:
   release:

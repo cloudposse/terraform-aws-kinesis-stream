@@ -1,4 +1,6 @@
 ---
+# Managed by the terraform-module scaffold. Do not edit; run `atmos fix`.
+# Comment `/terratest` on a pull request to run the tests. The shared workflow gates on the comment and the commenter.
 name: chatops
 on:
   issue_comment:
@@ -13,5 +15,4 @@ permissions:
 jobs:
   test:
     uses: cloudposse/.github/.github/workflows/shared-terraform-chatops.yml@main
-    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/terratest') }}
     secrets: inherit
