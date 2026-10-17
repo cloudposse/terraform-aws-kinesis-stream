@@ -120,9 +120,9 @@ usage: |-
   Use the outputs to wire up producers and consumers, for example `module.kinesis.stream_arn` in an IAM policy.
 
 examples: |-
-  - [examples/complete](examples/complete): a two-shard stream with two enhanced fan-out consumers. Its variables are set in `fixtures.us-east-2.tfvars`.
+  - [examples/complete](examples/complete): a two-shard stream with two enhanced fan-out consumers. Its inputs for the emulator-backed tests are set in `tests/stacks/deploy/test.yaml`.
 
-  Unit tests for the module run offline with `terraform test` (see `tests/main.tftest.hcl`).
+  Unit tests for the module run offline with `terraform test` (see `tests/main.tftest.hcl`); `atmos test` also applies the example to an AWS emulator.
 
 # Other files to include in this README from the project folder
 include: []

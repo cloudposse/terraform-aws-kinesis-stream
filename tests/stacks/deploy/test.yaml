@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=https://atmos.tools/schemas/atmos/atmos-manifest/1.0/atmos-manifest.json
+import:
+  - catalog/emulator
+
+vars:
+  stage: test
+
+components:
+  terraform:
+    complete:
+      metadata:
+        type: real
+      hooks:
+        emulator-up:
+          kind: steps
+          on_failure: fail
+          events: [before.terraform.test]
+          with:
+            - type: emulator
+              component: aws
+              action: up
+        emulator-down:
+          kind: steps
+          events: [after.terraform.test]
+          when: always
+          with:
+            - type: emulator
+              component: aws
+              action: down
+      vars:
+        namespace: eg
+        environment: use1
+        name: example
+        region: us-east-1
+        shard_count: 2
+        # The emulator (Floci) does not implement Kinesis ListTagsForResource for stream consumers,
+        # so enhanced fan-out consumers cannot be applied here. They are covered by the offline
+        # mocked tests in tests/main.tftest.hcl.
+        consumer_count: 0

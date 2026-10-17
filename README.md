@@ -122,9 +122,9 @@ Use the outputs to wire up producers and consumers, for example `module.kinesis.
 
 ## Examples
 
-- [examples/complete](examples/complete): a two-shard stream with two enhanced fan-out consumers. Its variables are set in `fixtures.us-east-2.tfvars`.
+- [examples/complete](examples/complete): a two-shard stream with two enhanced fan-out consumers. Its inputs for the emulator-backed tests are set in `tests/stacks/deploy/test.yaml`.
 
-Unit tests for the module run offline with `terraform test` (see `tests/main.tftest.hcl`).
+Unit tests for the module run offline with `terraform test` (see `tests/main.tftest.hcl`); `atmos test` also applies the example to an AWS emulator.
 
 
 
@@ -134,8 +134,8 @@ Unit tests for the module run offline with `terraform test` (see `tests/main.tft
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
@@ -168,7 +168,7 @@ Unit tests for the module run offline with `terraform test` (see `tests/main.tft
 | <a name="input_descriptor_formats"></a> [descriptor\_formats](#input\_descriptor\_formats) | Describe additional descriptors to be output in the `descriptors` output map.<br/>Map of maps. Keys are names of descriptors. Values are maps of the form<br/>`{<br/>   format = string<br/>   labels = list(string)<br/>}`<br/>(Type is `any` so the map values can later be enhanced to provide additional options.)<br/>`format` is a Terraform format string to be passed to the `format()` function.<br/>`labels` is a list of labels, in order, to pass to `format()` function.<br/>Label values will be normalized before being passed to `format()` so they will be<br/>identical to how they appear in `id`.<br/>Default is `{}` (`descriptors` output will be empty). | `any` | `{}` | no |
 | <a name="input_enabled"></a> [enabled](#input\_enabled) | Set to false to prevent the module from creating any resources | `bool` | `null` | no |
 | <a name="input_encryption_type"></a> [encryption\_type](#input\_encryption\_type) | The encryption type to use. Acceptable values are `NONE` and `KMS`. | `string` | `"KMS"` | no |
-| <a name="input_enforce_consumer_deletion"></a> [enforce\_consumer\_deletion](#input\_enforce\_consumer\_deletion) | A boolean that indicates all registered consumers should be deregistered from the stream so that the stream can be destroyed without error. | `bool` | `true` | no |
+| <a name="input_enforce_consumer_deletion"></a> [enforce\_consumer\_deletion](#input\_enforce\_consumer\_deletion) | If `true`, deregister all registered consumers when destroying the stream, so the stream can be destroyed without error | `bool` | `true` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | ID element. Usually used for region e.g. 'uw2', 'us-west-2', OR role 'prod', 'staging', 'dev', 'UAT' | `string` | `null` | no |
 | <a name="input_id_length_limit"></a> [id\_length\_limit](#input\_id\_length\_limit) | Limit `id` to this many characters (minimum 6).<br/>Set to `0` for unlimited length.<br/>Set to `null` for keep the existing setting, which defaults to `0`.<br/>Does not affect `id_full`. | `number` | `null` | no |
 | <a name="input_kms_key_id"></a> [kms\_key\_id](#input\_kms\_key\_id) | The GUID for the customer-managed KMS key to use for encryption. | `string` | `"alias/aws/kinesis"` | no |
@@ -179,9 +179,9 @@ Unit tests for the module run offline with `terraform test` (see `tests/main.tft
 | <a name="input_name"></a> [name](#input\_name) | ID element. Usually the component or solution name, e.g. 'app' or 'jenkins'.<br/>This is the only ID element not also included as a `tag`.<br/>The "name" tag is set to the full `id` string. There is no tag with the value of the `name` input. | `string` | `null` | no |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | ID element. Usually an abbreviation of your organization name, e.g. 'eg' or 'cp', to help ensure generated IDs are globally unique | `string` | `null` | no |
 | <a name="input_regex_replace_chars"></a> [regex\_replace\_chars](#input\_regex\_replace\_chars) | Terraform regular expression (regex) string.<br/>Characters matching the regex will be removed from the ID elements.<br/>If not set, `"/[^a-zA-Z0-9-]/"` is used to remove all characters other than hyphens, letters and digits. | `string` | `null` | no |
-| <a name="input_retention_period"></a> [retention\_period](#input\_retention\_period) | Length of time, in hours, that data records are accessible after they are added to the stream. Must be between 24 (the default) and 8760 (365 days). | `number` | `24` | no |
+| <a name="input_retention_period"></a> [retention\_period](#input\_retention\_period) | Length of time, in hours, that data records are accessible after they are added to the stream. Must be between 24 (the default) and 8760 (365 days) | `number` | `24` | no |
 | <a name="input_shard_count"></a> [shard\_count](#input\_shard\_count) | The number of shards that the stream will use | `number` | `1` | no |
-| <a name="input_shard_level_metrics"></a> [shard\_level\_metrics](#input\_shard\_level\_metrics) | A list of shard-level CloudWatch metrics which can be enabled for the stream. | `list(string)` | <pre>[<br/>  "IncomingBytes",<br/>  "OutgoingBytes"<br/>]</pre> | no |
+| <a name="input_shard_level_metrics"></a> [shard\_level\_metrics](#input\_shard\_level\_metrics) | A list of shard-level CloudWatch metrics which can be enabled for the stream | `list(string)` | <pre>[<br/>  "IncomingBytes",<br/>  "OutgoingBytes"<br/>]</pre> | no |
 | <a name="input_stage"></a> [stage](#input\_stage) | ID element. Usually used to indicate role, e.g. 'prod', 'staging', 'source', 'build', 'test', 'deploy', 'release' | `string` | `null` | no |
 | <a name="input_stream_mode"></a> [stream\_mode](#input\_stream\_mode) | Specifies the capacity mode of the stream. Must be either `PROVISIONED` or `ON_DEMAND`. If `ON_DEMAND` is used, then `shard_count` is ignored. If `null`, the AWS default (`PROVISIONED`) applies. | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Additional tags (e.g. `{'BusinessUnit': 'XYZ'}`).<br/>Neither the tag keys nor the tag values will be modified by this module. | `map(string)` | `{}` | no |
@@ -191,10 +191,10 @@ Unit tests for the module run offline with `terraform test` (see `tests/main.tft
 
 | Name | Description |
 | ---- | ----------- |
-| <a name="output_consumers"></a> [consumers](#output\_consumers) | List of consumers registered with Kinesis stream. |
-| <a name="output_name"></a> [name](#output\_name) | Name of the Kinesis stream. |
-| <a name="output_shard_count"></a> [shard\_count](#output\_shard\_count) | Number of shards provisioned. |
-| <a name="output_stream_arn"></a> [stream\_arn](#output\_stream\_arn) | ARN of the Kinesis stream. |
+| <a name="output_consumers"></a> [consumers](#output\_consumers) | List of enhanced fan-out consumers registered with the stream (empty when none are requested or the module is disabled) |
+| <a name="output_name"></a> [name](#output\_name) | Name of the Kinesis stream, or `null` when the module is disabled |
+| <a name="output_shard_count"></a> [shard\_count](#output\_shard\_count) | Number of shards provisioned, or `null` when the module is disabled or the stream is `ON_DEMAND` |
+| <a name="output_stream_arn"></a> [stream\_arn](#output\_stream\_arn) | ARN of the Kinesis stream, or `null` when the module is disabled |
 <!-- markdownlint-restore -->
 
 

@@ -5,7 +5,7 @@ variable "shard_count" {
 }
 
 variable "retention_period" {
-  description = "Length of time, in hours, that data records are accessible after they are added to the stream. Must be between 24 (the default) and 8760 (365 days)."
+  description = "Length of time, in hours, that data records are accessible after they are added to the stream. Must be between 24 (the default) and 8760 (365 days)"
   type        = number
   default     = 24
 
@@ -16,18 +16,20 @@ variable "retention_period" {
 }
 
 variable "shard_level_metrics" {
-  description = "A list of shard-level CloudWatch metrics which can be enabled for the stream."
+  description = "A list of shard-level CloudWatch metrics which can be enabled for the stream"
   type        = list(string)
   default = [
     "IncomingBytes",
     "OutgoingBytes"
   ]
+  nullable = false
 }
 
 variable "enforce_consumer_deletion" {
-  description = "A boolean that indicates all registered consumers should be deregistered from the stream so that the stream can be destroyed without error."
+  description = "If `true`, deregister all registered consumers when destroying the stream, so the stream can be destroyed without error"
   type        = bool
   default     = true
+  nullable    = false
 }
 
 variable "encryption_type" {
@@ -53,7 +55,7 @@ variable "stream_mode" {
   default     = null
 
   validation {
-    condition     = var.stream_mode == null || contains(["PROVISIONED", "ON_DEMAND"], var.stream_mode)
+    condition     = var.stream_mode == null ? true : contains(["PROVISIONED", "ON_DEMAND"], var.stream_mode)
     error_message = "stream_mode must be `PROVISIONED`, `ON_DEMAND`, or null."
   }
 }

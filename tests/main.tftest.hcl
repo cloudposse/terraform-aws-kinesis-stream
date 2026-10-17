@@ -56,8 +56,8 @@ run "disabled_creates_nothing" {
   }
 
   assert {
-    condition     = output.name == "" && output.stream_arn == ""
-    error_message = "Name and ARN outputs should be empty strings when disabled."
+    condition     = output.name == null && output.stream_arn == null && output.shard_count == null
+    error_message = "Name, ARN and shard_count outputs should be null when disabled."
   }
 }
 
