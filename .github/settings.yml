@@ -1,10 +1,8 @@
+# Managed by the terraform-module scaffold. Do not edit; run `atmos fix`.
 # Upstream changes from _extends are only recognized when modifications are made to this file in the default branch.
 _extends: .github
 repository:
   name: terraform-aws-kinesis-stream
-  description: ""
-  homepage: https://cloudposse.com/accelerate
+  description: "Terraform module to provision AWS Kinesis Data Streams and consumers"
+  homepage: https://cloudposse.com
   topics: ""
-
-
-

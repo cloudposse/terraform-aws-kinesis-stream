@@ -1,5 +1,6 @@
 variable "region" {
-  type = string
+  description = "AWS region to deploy to"
+  type        = string
 }
 
 variable "shard_count" {

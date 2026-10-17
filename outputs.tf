@@ -1,6 +1,6 @@
 output "name" {
   description = "Name of the Kinesis stream."
-  value       = join("", aws_kinesis_stream.default.*.name)
+  value       = join("", aws_kinesis_stream.default[*].name)
 }
 
 output "shard_count" {
@@ -10,7 +10,7 @@ output "shard_count" {
 
 output "stream_arn" {
   description = "ARN of the Kinesis stream."
-  value       = join("", aws_kinesis_stream.default.*.arn)
+  value       = join("", aws_kinesis_stream.default[*].arn)
 }
 
 output "consumers" {
